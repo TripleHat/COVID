@@ -1,0 +1,71 @@
+#!/bin/python
+import gdshortener
+import os,sys,time
+import string
+import requests
+import prettytable
+import argparse
+import speedtest
+
+yellow = '\033[33m'
+blue = '\033[34m'
+cyan = '\033[36m'
+green = '\033[32;1m'
+red = '\033[31;1m'
+close = '\033[0m'
+
+reqError = [320, 400, 401, 404, 422, 500, 501, 502, 503, 504]
+reqSucc = [200, 201, 202, 203]
+
+def Textout(text):
+ for character in text:
+  sys.stdout.write(character)
+  sys.stdout.flush()
+  time.sleep(0.05)
+
+def short_url(link):
+ try:
+  sh = gdshortener.ISGDShortener()
+  short = sh.shorten(url=link)
+  if short == "":
+   print(red + "ERROR: failed to shorten link\n" + close)
+  else: return short[0]
+ except:
+  Textout(red+"There is Problem in Creating Link")
+
+def covid(country):
+ try:
+    cv = requests.get("https://corona.lmao.ninja/v2/countries/"+country)
+    res = cv.json()
+    check = cv.status_code
+    if check in reqError:
+     Textout(red+"Error: Enter Valid Country\n"+close)
+     exit()
+    else:
+        flag = res["countryInfo"]["flag"]
+        link = short_url(flag)
+        T = prettytable.PrettyTable([yellow+"CATEGORY"+close,yellow+"STATISTICS"+close])
+        T.align[yellow+"CATEGORY"+close] = "l"
+        T.align[yellow+"STATISTICS"+close] = "l"
+        T.add_row([green+"COUNTRY NAME"+close, res["country"]])
+        T.add_row([green+"TOTAL CASES"+close, res["cases"]])
+        T.add_row([green+"TODAY CASES"+close, res["todayCases"]])
+        T.add_row([green+"ACTIVE VICTIM"+close, res["active"]])
+        T.add_row([green+"CRITICAL VICTIM"+close, res["critical"]])
+        T.add_row([green+"TOTAL DEATH"+close, res["deaths"]])
+        T.add_row([green+"TODAY DEATH"+close, res["todayDeaths"]])
+        T.add_row([green+"TOTAL RECOVERED"+close, res["recovered"]])
+        T.add_row([green+"TODAY RECOVERED"+close, res["todayRecovered"]])
+        T.add_row([green+"COUNTRY POPULATION"+close, res["population"]])
+        T.add_row([green+"NATIONAL FLAG"+close, link])
+        print(T.get_string(title=red+res["country"].upper()+" COVID19 INFO"+close))
+
+ except:
+       Textout(red+"ERROR OCCURED\n"+close)
+
+parser = argparse.ArgumentParser(description='Covid19 stats')
+parser.add_argument('-c','--country', help='specify country to retrive info', required=True)
+args = vars(parser.parse_args())
+if args['country']:
+ covid(args['country'])
+
